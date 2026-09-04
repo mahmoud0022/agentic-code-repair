@@ -18,8 +18,8 @@ BUG_DESCRIPTION = (
     "and repair it so that the supplied tests pass."
 )
 MAX_ATTEMPTS = 3
-PYTEST_TIMEOUT_SECONDS = 20
-TIMEOUT_MESSAGE = "PYTEST TIMEOUT: exceeded 20 seconds"
+PYTEST_TIMEOUT_SECONDS = 10
+TIMEOUT_MESSAGE = "PYTEST TIMEOUT: exceeded 10 seconds"
 
 # Simple, self-contained QuixBugs tasks previously identified as suitable
 # for this small local evaluation (no dependency on other buggy modules
