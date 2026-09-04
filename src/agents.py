@@ -21,14 +21,22 @@ def _strip_code_fences(text: str) -> str:
 
 
 def analyzer_agent(state: RepairState) -> dict:
-    prompt = (
-        "You are a code analysis assistant.\n"
-        f"Bug description: {state['bug_description']}\n\n"
-        "Current source code:\n"
-        f"{state['code']}\n\n"
-        "Briefly explain what is probably wrong and what should change. "
-        "Do not rewrite the file, just explain."
+    prompt_parts = [
+        "You are a code analysis assistant.",
+        f"Bug description: {state['bug_description']}",
+        "Current source code:",
+        state["code"],
+    ]
+    if state.get("test_output"):
+        prompt_parts.append("Latest pytest output:")
+        prompt_parts.append(state["test_output"])
+    prompt_parts.append(
+        "Briefly identify: what is currently wrong, what the latest test "
+        "failure indicates (if pytest output was given), and what should "
+        "be changed next. Do not rewrite the file, just explain concisely."
     )
+    prompt = "\n\n".join(prompt_parts)
+
     response = llm.invoke(prompt)
     return {"analysis": response.content}
 

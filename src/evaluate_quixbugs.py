@@ -127,7 +127,7 @@ def build_graph(tester_agent):
     graph.add_edge("analyzer", "fixer")
     graph.add_edge("fixer", "tester")
     graph.add_conditional_edges(
-        "tester", after_tester, {"retry": "fixer", "end": END}
+        "tester", after_tester, {"retry": "analyzer", "end": END}
     )
 
     return graph.compile()
