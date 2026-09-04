@@ -53,18 +53,23 @@ def _extract_code(text: str) -> str | None:
 
 def analyzer_agent(state: RepairState) -> dict:
     prompt_parts = [
-        "You are a code analysis assistant.",
+        "You are a precise code diagnosis assistant.",
         f"Bug description: {state['bug_description']}",
-        "Current source code:",
+        "Current implementation:",
         state["code"],
     ]
     if state.get("test_output"):
-        prompt_parts.append("Latest pytest output:")
+        prompt_parts.append("Latest pytest output (exact failing assertion/error):")
         prompt_parts.append(state["test_output"])
     prompt_parts.append(
-        "Briefly identify: what is currently wrong, what the latest test "
-        "failure indicates (if pytest output was given), and what should "
-        "be changed next. Do not rewrite the file, just explain concisely."
+        "Diagnose the bug. Cover only:\n"
+        "1. The exact failing pytest assertion or error (if given).\n"
+        "2. What the current implementation actually does.\n"
+        "3. The smallest likely root cause.\n"
+        "4. The exact code change needed to fix it.\n\n"
+        "Do not rewrite the whole program. Do not invent new tests. "
+        "Do not discuss unrelated edge cases. Keep the diagnosis short "
+        "and specific."
     )
     prompt = "\n\n".join(prompt_parts)
 
@@ -76,16 +81,33 @@ def fixer_agent(state: RepairState) -> dict:
     expected_functions = _function_names(state["code"])
 
     prompt_parts = [
-        "You are a Python code fixer.",
+        "You are a precise Python code fixer.",
         f"Bug description: {state['bug_description']}",
-        f"Analysis: {state['analysis']}",
+        f"Analyzer diagnosis: {state['analysis']}",
         "Current source code:",
         state["code"],
     ]
     if state.get("test_output"):
-        prompt_parts.append("Previous pytest output:")
+        prompt_parts.append("Latest pytest output:")
         prompt_parts.append(state["test_output"])
+    if state["attempts"] > 0:
+        prompt_parts.append(
+            "Note: the current source code above may already be the "
+            "result of a previous failed repair attempt. Do not blindly "
+            "repeat that previous fix - use the latest pytest output to "
+            "correct this version."
+        )
     prompt_parts.append(
+        "Fix the bug using the smallest possible change:\n"
+        "- Preserve the existing function name(s) and signature(s).\n"
+        "- Preserve all unrelated code exactly as-is.\n"
+        "- Do not add tests.\n"
+        "- Do not add imports unless strictly required for the fix.\n"
+        "- Do not add explanations or comments unless already present and "
+        "needed.\n"
+        "- Do not change any public API.\n"
+        "- Pay close attention to the exact expected vs actual values in "
+        "the pytest output and fix the logic accordingly.\n\n"
         "Return ONLY the complete corrected Python file contents. "
         "No markdown fences. No explanation."
     )
