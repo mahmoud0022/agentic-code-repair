@@ -1,0 +1,5 @@
+langgraph==1.2.11
+langchain==1.4.0
+langchain-ollama==1.1.0
+pytest==9.1.1
+gradio==6.26.0
