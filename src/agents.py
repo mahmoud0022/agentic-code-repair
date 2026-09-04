@@ -63,14 +63,21 @@ def fixer_agent(state: RepairState) -> dict:
     }
 
 
-def tester_agent(state: RepairState) -> dict:
-    result = subprocess.run(
-        ["python", "-m", "pytest", TEST_FILE_PATH, "-q"],
-        capture_output=True,
-        text=True,
-    )
-    output = result.stdout + result.stderr
-    return {
-        "test_output": output,
-        "tests_passed": result.returncode == 0,
-    }
+def make_tester_agent(test_file_path: str, cwd: str | None = None):
+    def tester_agent(state: RepairState) -> dict:
+        result = subprocess.run(
+            ["python", "-m", "pytest", test_file_path, "-q"],
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+        )
+        output = result.stdout + result.stderr
+        return {
+            "test_output": output,
+            "tests_passed": result.returncode == 0,
+        }
+
+    return tester_agent
+
+
+tester_agent = make_tester_agent(TEST_FILE_PATH)
